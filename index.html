@@ -57,7 +57,7 @@
                     <div class="mb-5"><label for="phone" class="block text-sm font-medium text-gray-700 mb-2">聯絡電話</label><input type="tel" id="phone" required class="form-input w-full px-4 py-3 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none" placeholder="請輸入您的聯絡電話"></div>
                     <div class="mb-6"><label for="body-fat" class="block text-sm font-medium text-gray-700 mb-2">首次體脂率 (%)</label><input type="number" id="body-fat" step="0.1" required class="form-input w-full px-4 py-3 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none" placeholder="請輸入首次測量的體脂率"></div>
                     <div class="text-center text-xs text-gray-500 mb-8 p-3 bg-gray-100 rounded-lg"><p>登錄後請於 <strong class="text-blue-600">9/30前</strong> 且 <strong class="text-blue-600">間隔至少一週</strong> 後，返回門市進行二次測量以完成挑戰。</p></div>
-                    <button type="submit" id="submit-button" class="submit-button w-full text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center"><span id="button-text">完成登錄，鎖定資格</span><div id="button-loader" class="loader ease-linear rounded-full border-2 border-t-2 border-gray-200 h-6 w-6 hidden"></div></button>
+                    <button type="submit" id="submit-button" class="submit-button w-full text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed" disabled><span id="button-text">完成登錄，鎖定資格</span><div id="button-loader" class="loader ease-linear rounded-full border-2 border-t-2 border-gray-200 h-6 w-6 hidden"></div></button>
                     <p id="error-message" class="text-red-500 text-center mt-4 hidden"></p>
                 </form>
             </div>
@@ -76,7 +76,6 @@
                 <button id="logout-button" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg transition duration-300">登出</button>
             </div>
             
-            <!-- Second Visit Form -->
             <div class="p-6 bg-gray-50 border-b border-gray-200">
                 <h2 class="text-lg font-bold text-gray-700 mb-4">二次回訪登錄</h2>
                 <form id="update-form" class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
@@ -88,7 +87,7 @@
                         <label for="update-body-fat" class="block text-sm font-medium text-gray-600 mb-1">第二次體脂率 (%)</label>
                         <input type="number" step="0.1" id="update-body-fat" required class="form-input w-full px-3 py-2 rounded-md" placeholder="輸入第二次數據">
                     </div>
-                    <button type="submit" id="update-button" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition duration-300">更新資料</button>
+                    <button type="submit" id="update-button" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>更新資料</button>
                 </form>
                 <p id="update-message" class="text-sm mt-3"></p>
             </div>
@@ -114,12 +113,24 @@
         </div>
     </div>
 
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4">
+        <div class="modal-backdrop absolute inset-0"></div>
+        <div id="delete-modal-content" class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 z-10 transform transition-all scale-95 opacity-0">
+            <h2 class="text-xl font-bold text-gray-800">確認刪除</h2>
+            <p class="text-gray-600 mt-2">您確定要永久刪除 <strong id="delete-name" class="text-red-600"></strong> 的資料嗎？此操作無法復原。</p>
+            <div class="mt-6 flex justify-end space-x-4">
+                <button id="cancel-delete-button" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition">取消</button>
+                <button id="confirm-delete-button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition">確認刪除</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, where, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, where, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- Firebase Configuration ---
         const manualFirebaseConfig = {
           apiKey: "AIzaSyB2AIWZVurf8xAXgcV4gWSxcN42KTl1oM",
           authDomain: "galaxywatch8-7224c.firebaseapp.com",
@@ -129,10 +140,7 @@
           appId: "1:102813331244:web:0b740ffb594ba310be66e89",
           measurementId: "G-69TDX7DTMB"
         };
-
-        // --- 請勿修改以下程式碼 ---
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : manualFirebaseConfig;
-        
         let persistentAppId = localStorage.getItem('samsungChallengeAppId');
         if (!persistentAppId) {
             persistentAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -153,11 +161,30 @@
         const challengeForm = document.getElementById('challenge-form');
         const updateForm = document.getElementById('update-form');
         const updateMessage = document.getElementById('update-message');
+        const submitButton = document.getElementById('submit-button');
+        const updateButton = document.getElementById('update-button');
+        const errorMessage = document.getElementById('error-message');
+        const deleteModal = document.getElementById('delete-modal');
+        const deleteModalContent = document.getElementById('delete-modal-content');
+        const deleteName = document.getElementById('delete-name');
+        const cancelDeleteButton = document.getElementById('cancel-delete-button');
+        const confirmDeleteButton = document.getElementById('confirm-delete-button');
 
         const openLoginModal = () => { loginModal.classList.remove('hidden'); setTimeout(() => { loginModalContent.classList.remove('scale-95', 'opacity-0'); }, 10); };
         const closeLoginModal = () => { loginModalContent.classList.add('scale-95', 'opacity-0'); setTimeout(() => { loginModal.classList.add('hidden'); }, 200); };
         const showAdminView = async () => { customerView.classList.add('hidden'); adminLoginButton.classList.add('hidden'); adminView.classList.remove('hidden'); await fetchData(); };
         const showCustomerView = () => { adminView.classList.add('hidden'); customerView.classList.remove('hidden'); adminLoginButton.classList.remove('hidden'); };
+        
+        const openDeleteModal = (id, name) => {
+            deleteName.textContent = name;
+            confirmDeleteButton.dataset.id = id;
+            deleteModal.classList.remove('hidden');
+            setTimeout(() => { deleteModalContent.classList.remove('scale-95', 'opacity-0'); }, 10);
+        };
+        const closeDeleteModal = () => {
+            deleteModalContent.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => { deleteModal.classList.add('hidden'); }, 200);
+        };
 
         adminLoginButton.addEventListener('click', openLoginModal);
         loginModal.addEventListener('click', (e) => { if (e.target === loginModal) closeLoginModal(); });
@@ -171,6 +198,22 @@
             }
         });
         logoutButton.addEventListener('click', showCustomerView);
+        cancelDeleteButton.addEventListener('click', closeDeleteModal);
+        deleteModal.addEventListener('click', (e) => { if (e.target === deleteModal) closeDeleteModal(); });
+
+        confirmDeleteButton.addEventListener('click', async (e) => {
+            const id = e.target.dataset.id;
+            if (!id) return;
+            try {
+                const collectionPath = `artifacts/${appId}/public/data/healthChallengeRegistrations`;
+                await deleteDoc(doc(db, collectionPath, id));
+                closeDeleteModal();
+                await fetchData();
+            } catch (error) {
+                console.error("Error deleting document: ", error);
+                alert("刪除失敗，請稍後再試。");
+            }
+        });
 
         const tableWrapper = document.getElementById('table-wrapper');
         const showLoadingState = () => { tableWrapper.innerHTML = `<div class="text-center p-10"><div class="loader ease-linear rounded-full border-4 border-t-4 !border-gray-300 !border-t-blue-600 h-12 w-12 mx-auto"></div><p class="mt-4 text-gray-600">正在載入資料...</p></div>`; };
@@ -183,6 +226,7 @@
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">二次體脂 (%)</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">體脂變化</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">登錄時間</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
             </tr></thead><tbody class="text-gray-700">`;
             data.forEach(item => {
                 let secondBodyFatHTML = item.secondBodyFat !== undefined ? item.secondBodyFat : '---';
@@ -205,12 +249,21 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-bold">${secondBodyFatHTML}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">${changeHTML}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">${item.registrationDate}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm"><button class="delete-button text-red-600 hover:text-red-800 font-semibold" data-id="${item.id}" data-name="${item.name}">刪除</button></td>
                 </tr>`;
             });
             tableHTML += `</tbody></table>`;
             tableWrapper.innerHTML = tableHTML;
+            tableWrapper.addEventListener('click', (e) => {
+                if (e.target.classList.contains('delete-button')) {
+                    const id = e.target.dataset.id;
+                    const name = e.target.dataset.name;
+                    openDeleteModal(id, name);
+                }
+            });
         };
         async function fetchData() {
+            if (!db) return;
             showLoadingState();
             try {
                 const collectionPath = `artifacts/${appId}/public/data/healthChallengeRegistrations`;
@@ -229,10 +282,9 @@
 
         challengeForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (!db) { errorMessage.textContent = "資料庫尚未連線，請稍後再試。"; errorMessage.classList.remove('hidden'); return; }
             const buttonText = document.getElementById('button-text');
             const buttonLoader = document.getElementById('button-loader');
-            const submitButton = document.getElementById('submit-button');
-            const errorMessage = document.getElementById('error-message');
             buttonText.classList.add('hidden');
             buttonLoader.classList.remove('hidden');
             submitButton.disabled = true;
@@ -258,6 +310,7 @@
 
         updateForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (!db) { updateMessage.textContent = "資料庫尚未連線，請稍後再試。"; updateMessage.className = 'text-sm mt-3 text-red-600'; return; }
             const phone = document.getElementById('update-phone').value.trim();
             const secondBodyFat = parseFloat(document.getElementById('update-body-fat').value);
             
@@ -266,27 +319,22 @@
                 updateMessage.className = 'text-sm mt-3 text-red-600';
                 return;
             }
-
             updateMessage.textContent = '正在查詢並更新資料...';
             updateMessage.className = 'text-sm mt-3 text-gray-600';
-
             try {
                 const collectionPath = `artifacts/${appId}/public/data/healthChallengeRegistrations`;
                 const q = query(collection(db, collectionPath), where("phone", "==", phone));
                 const querySnapshot = await getDocs(q);
-
                 if (querySnapshot.empty) {
                     updateMessage.textContent = `錯誤：找不到電話號碼為 ${phone} 的顧客資料。`;
                     updateMessage.className = 'text-sm mt-3 text-red-600';
                 } else {
                     const docToUpdate = querySnapshot.docs[0];
-                    await updateDoc(docToUpdate.ref, {
-                        secondBodyFat: secondBodyFat
-                    });
+                    await updateDoc(docToUpdate.ref, { secondBodyFat: secondBodyFat });
                     updateMessage.textContent = `成功更新 ${docToUpdate.data().name} 的資料！`;
                     updateMessage.className = 'text-sm mt-3 text-green-600';
                     updateForm.reset();
-                    await fetchData(); // Refresh table
+                    await fetchData();
                 }
             } catch (error) {
                  updateMessage.textContent = `更新失敗: ${error.message}`;
@@ -296,12 +344,8 @@
 
         async function initializeFirebase() {
             if (!firebaseConfig) {
-                const errorMessage = document.getElementById('error-message');
-                if(errorMessage) {
-                    errorMessage.textContent = "Firebase 設定檔遺失，請依照指示貼上設定碼。";
-                    errorMessage.classList.remove('hidden');
-                }
-                alert("Firebase 設定檔遺失，請依照程式碼中的註解，貼上您的 Firebase 設定。");
+                errorMessage.textContent = "Firebase 設定檔遺失，請聯繫管理員。";
+                errorMessage.classList.remove('hidden');
                 return;
             }
             try {
@@ -311,7 +355,13 @@
                 if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
                 else await signInAnonymously(auth);
                 console.log("Firebase Initialized Successfully.");
-            } catch (error) { console.error("Firebase Init Error:", error); }
+                submitButton.disabled = false;
+                updateButton.disabled = false;
+            } catch (error) { 
+                console.error("Firebase Init Error:", error);
+                errorMessage.textContent = `系統初始化失敗: ${error.message}，請重新整理頁面。`;
+                errorMessage.classList.remove('hidden');
+            }
         }
         initializeFirebase();
     </script>
