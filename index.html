@@ -57,7 +57,7 @@
                     <div class="mb-5"><label for="phone" class="block text-sm font-medium text-gray-700 mb-2">聯絡電話</label><input type="tel" id="phone" required class="form-input w-full px-4 py-3 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none" placeholder="請輸入您的聯絡電話"></div>
                     <div class="mb-6"><label for="body-fat" class="block text-sm font-medium text-gray-700 mb-2">首次體脂率 (%)</label><input type="number" id="body-fat" step="0.1" required class="form-input w-full px-4 py-3 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none" placeholder="請輸入首次測量的體脂率"></div>
                     <div class="text-center text-xs text-gray-500 mb-8 p-3 bg-gray-100 rounded-lg"><p>登錄後請於 <strong class="text-blue-600">9/30前</strong> 且 <strong class="text-blue-600">間隔至少一週</strong> 後，返回門市進行二次測量以完成挑戰。</p></div>
-                    <button type="submit" id="submit-button" class="submit-button w-full text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed" disabled><span id="button-text">完成登錄，鎖定資格</span><div id="button-loader" class="loader ease-linear rounded-full border-2 border-t-2 border-gray-200 h-6 w-6 hidden"></div></button>
+                    <button type="submit" id="submit-button" class="submit-button w-full text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed" disabled><span id="button-text">系統初始化中...</span><div id="button-loader" class="loader ease-linear rounded-full border-2 border-t-2 border-gray-200 h-6 w-6 hidden"></div></button>
                     <p id="error-message" class="text-red-500 text-center mt-4 hidden"></p>
                 </form>
             </div>
@@ -162,6 +162,7 @@
         const updateForm = document.getElementById('update-form');
         const updateMessage = document.getElementById('update-message');
         const submitButton = document.getElementById('submit-button');
+        const buttonText = document.getElementById('button-text');
         const updateButton = document.getElementById('update-button');
         const errorMessage = document.getElementById('error-message');
         const deleteModal = document.getElementById('delete-modal');
@@ -203,7 +204,7 @@
 
         confirmDeleteButton.addEventListener('click', async (e) => {
             const id = e.target.dataset.id;
-            if (!id) return;
+            if (!id || !db) return;
             try {
                 const collectionPath = `artifacts/${appId}/public/data/healthChallengeRegistrations`;
                 await deleteDoc(doc(db, collectionPath, id));
@@ -283,7 +284,6 @@
         challengeForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!db) { errorMessage.textContent = "資料庫尚未連線，請稍後再試。"; errorMessage.classList.remove('hidden'); return; }
-            const buttonText = document.getElementById('button-text');
             const buttonLoader = document.getElementById('button-loader');
             buttonText.classList.add('hidden');
             buttonLoader.classList.remove('hidden');
@@ -355,10 +355,12 @@
                 if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
                 else await signInAnonymously(auth);
                 console.log("Firebase Initialized Successfully.");
+                buttonText.textContent = '完成登錄，鎖定資格';
                 submitButton.disabled = false;
                 updateButton.disabled = false;
             } catch (error) { 
                 console.error("Firebase Init Error:", error);
+                buttonText.textContent = '系統連線失敗';
                 errorMessage.textContent = `系統初始化失敗: ${error.message}，請重新整理頁面。`;
                 errorMessage.classList.remove('hidden');
             }
