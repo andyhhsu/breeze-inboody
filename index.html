@@ -119,15 +119,28 @@
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, where, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const CORRECT_PASSWORD = '6699';
+        // --- Firebase Configuration ---
+        const manualFirebaseConfig = {
+          apiKey: "AIzaSyB2AIWZVurf8xAXgcV4gWSxcN42KTl1oM",
+          authDomain: "galaxywatch8-7224c.firebaseapp.com",
+          projectId: "galaxywatch8-7224c",
+          storageBucket: "galaxywatch8-7224c.appspot.com",
+          messagingSenderId: "102813331244",
+          appId: "1:102813331244:web:0b740ffb594ba310be66e89",
+          measurementId: "G-69TDX7DTMB"
+        };
+
+        // --- 請勿修改以下程式碼 ---
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : manualFirebaseConfig;
+        
         let persistentAppId = localStorage.getItem('samsungChallengeAppId');
         if (!persistentAppId) {
             persistentAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
             localStorage.setItem('samsungChallengeAppId', persistentAppId);
         }
         const appId = persistentAppId;
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const CORRECT_PASSWORD = '6699';
         let db;
 
         const customerView = document.getElementById('customer-view');
@@ -282,7 +295,15 @@
         });
 
         async function initializeFirebase() {
-            if (!firebaseConfig) { console.error("Firebase config is missing."); return; }
+            if (!firebaseConfig) {
+                const errorMessage = document.getElementById('error-message');
+                if(errorMessage) {
+                    errorMessage.textContent = "Firebase 設定檔遺失，請依照指示貼上設定碼。";
+                    errorMessage.classList.remove('hidden');
+                }
+                alert("Firebase 設定檔遺失，請依照程式碼中的註解，貼上您的 Firebase 設定。");
+                return;
+            }
             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
