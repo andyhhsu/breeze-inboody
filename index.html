@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galaxy Watch8 減脂大挑戰!</title>
+    <title>Galaxy Watch8 減脂挑戰賽！</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,14 +49,37 @@
         <div id="customer-view" class="w-full max-w-md z-10">
             <div id="registration-form-container" class="form-container p-8 rounded-2xl">
                 <div class="text-center mb-8">
-                    <h1 class="text-3xl font-bold text-gray-800">Galaxy Watch8 減脂大挑戰!</h1>
-                    <p class="text-gray-500 mt-2">登錄資料，鎖定你的挑戰資格！</p>
+                    <h1 class="text-3xl font-bold text-gray-800 leading-tight">Galaxy Watch8 <br> 減脂挑戰賽！</h1>
+                    <p class="text-gray-500 mt-4">登錄資料，開始您的挑戰！</p>
                 </div>
                 <form id="challenge-form">
                     <div class="mb-5"><label for="name" class="block text-sm font-medium text-gray-700 mb-2">姓名</label><input type="text" id="name" required class="form-input w-full px-4 py-3 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none" placeholder="請輸入您的姓名"></div>
                     <div class="mb-5"><label for="phone" class="block text-sm font-medium text-gray-700 mb-2">聯絡電話</label><input type="tel" id="phone" required class="form-input w-full px-4 py-3 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none" placeholder="請輸入您的聯絡電話"></div>
                     <div class="mb-6"><label for="body-fat" class="block text-sm font-medium text-gray-700 mb-2">首次體脂率 (%)</label><input type="number" id="body-fat" step="0.1" required class="form-input w-full px-4 py-3 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none" placeholder="請輸入首次測量的體脂率"></div>
-                    <div class="text-center text-xs text-gray-500 mb-8 p-3 bg-gray-100 rounded-lg"><p>登錄後請於 <strong class="text-blue-600">9/30前</strong> 且 <strong class="text-blue-600">間隔至少一週</strong> 後，返回門市進行二次測量以完成挑戰。</p></div>
+                    
+                    <!-- Updated Event Information Section -->
+                    <div class="text-left text-xs text-gray-600 mb-8 p-4 bg-gray-50 rounded-lg space-y-3">
+                        <div>
+                            <p><strong class="text-blue-600">活動期間：</strong> 2025/9/1 ~ 9/30</p>
+                        </div>
+                        <div>
+                            <p><strong class="text-blue-600">挑戰辦法：</strong></p>
+                            <p class="ml-2 mt-1">1. <strong class="font-semibold">登錄參賽：</strong> 活動期間至門市登錄資料與首次體脂率，即可抽「快充行動電源」！</p>
+                            <p class="ml-2 mt-1">2. <strong class="font-semibold">完成挑戰：</strong> 9/30 前回門市量測第二次體脂，依「體脂下降幅度」爭奪排名大獎！</p>
+                        </div>
+                        <div>
+                            <p><strong class="text-blue-600">排名大獎：</strong></p>
+                            <ul class="list-none ml-2 mt-1 space-y-1">
+                                <li><strong class="font-semibold text-yellow-500">冠軍：</strong> Samsung Galaxy Fit3</li>
+                                <li><strong class="font-semibold text-gray-400">亞軍：</strong> 放鬆筋膜槍</li>
+                                <li><strong class="font-semibold text-orange-400">季軍：</strong> 快充行動電源</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p><strong class="text-blue-600">得獎公布：</strong> 10/1 (三) 於官方粉絲專頁公布，敬請鎖定！</p>
+                        </div>
+                    </div>
+
                     <button type="submit" id="submit-button" class="submit-button w-full text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed" disabled><span id="button-text">系統初始化中...</span><div id="button-loader" class="loader ease-linear rounded-full border-2 border-t-2 border-gray-200 h-6 w-6 hidden"></div></button>
                     <p id="error-message" class="text-red-500 text-center mt-4 hidden"></p>
                 </form>
@@ -64,7 +87,7 @@
             <div id="success-message" class="hidden text-center form-container p-10 rounded-2xl">
                 <svg class="w-16 h-16 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 <h2 class="text-2xl font-bold text-gray-800 mb-2">登錄成功！</h2>
-                <p class="text-gray-600">您的挑戰資格已鎖定。</p>
+                <p class="text-gray-600">您已成功加入挑戰！</p>
                 <p class="text-gray-600 mt-1">我們期待您回來見證改變！</p>
             </div>
         </div>
@@ -132,7 +155,6 @@
         import { getFirestore, collection, addDoc, getDocs, query, serverTimestamp, where, updateDoc, doc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Firebase Configuration ---
-        // NOTE: This is a placeholder config. In a real environment, use the injected __firebase_config.
         const manualFirebaseConfig = {
          apiKey: "AIzaSyBZAiWZVurRf0xAXgcV4gWSxcN42KTi1oM",
          authDomain: "galaxywatch8-7224c.firebaseapp.com",
@@ -143,12 +165,15 @@
          measurementId: "G-69TDX7DTMB"
         };
 
+        // --- Application Settings ---
+        // Use a fixed App ID to ensure data consistency across environments
+        const appId = 'galaxy-watch8-challenge';
+        const CORRECT_PASSWORD = '6699';
+        
         // --- Do not modify below this line ---
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : manualFirebaseConfig;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
-        const CORRECT_PASSWORD = '6699';
         let db;
         let unsubscribe; // To hold the onSnapshot listener
 
@@ -398,7 +423,7 @@
                     await signInAnonymously(auth);
                 }
                 console.log("Firebase Initialized Successfully. User UID:", auth.currentUser.uid);
-                buttonText.textContent = '完成登錄，鎖定資格';
+                buttonText.textContent = '完成登錄';
                 submitButton.disabled = false;
                 updateButton.disabled = false;
             } catch (error) { 
