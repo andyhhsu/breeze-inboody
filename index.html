@@ -131,6 +131,7 @@
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, where, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // --- Firebase Configuration ---
         const manualFirebaseConfig = {
           apiKey: "AIzaSyB2AIWZVurf8xAXgcV4gWSxcN42KTl1oM",
           authDomain: "galaxywatch8-7224c.firebaseapp.com",
@@ -140,7 +141,10 @@
           appId: "1:102813331244:web:0b740ffb594ba310be66e89",
           measurementId: "G-69TDX7DTMB"
         };
+
+        // --- 請勿修改以下程式碼 ---
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : manualFirebaseConfig;
+        
         let persistentAppId = localStorage.getItem('samsungChallengeAppId');
         if (!persistentAppId) {
             persistentAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
