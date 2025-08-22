@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一個月健康見證計畫</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f4f7fa; }
+        .loader { border-top-color: #ffffff; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .form-container {
+            background: white;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease-in-out;
+        }
+        .form-input {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+        .form-input:focus {
+            background-color: white;
+            border-color: #0075e2;
+            box-shadow: 0 0 0 3px rgba(0, 117, 226, 0.2);
+        }
+        .submit-button {
+            background: linear-gradient(90deg, #0075e2, #009cff);
+            box-shadow: 0 4px 20px rgba(0, 117, 226, 0.3);
+        }
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .admin-table-header { background-color: #f8f9fa; }
+        .admin-table-row:nth-child(even) { background-color: #f8f9fa; }
+        .admin-table-row:hover { background-color: #e9ecef; }
+    </style>
+</head>
+<body class="text-gray-800 flex items-center justify-center min-h-screen p-4 antialiased">
+    
+    <!-- Main Container -->
+    <main class="w-full h-full flex items-center justify-center">
+        <!-- Customer Registration View -->
+        <div id="customer-view" class="w-full max-w-md z-10">
+            <div id="registration-form-container" class="form-container p-8 rounded-2xl">
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl font-bold text-gray-800">一個月健康見證計畫</h1>
+                    <p class="text-gray-500 mt-2">登錄資料，鎖定你的挑戰資格！</p>
+                </div>
+                <form id="challenge-form">
+                    <div class="mb-5"><label for="name" class="block text-sm font-medium text-gray-700 mb-2">姓名</label><input type="text" id="name" required class="form-input w-full px-4 py-3 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none" placeholder="請輸入您的姓名"></div>
+                    <div class="mb-5"><label for="phone" class="block text-sm font-medium text-gray-700 mb-2">聯絡電話</label><input type="tel" id="phone" required class="form-input w-full px-4 py-3 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none" placeholder="請輸入您的聯絡電話"></div>
+                    <div class="mb-6"><label for="body-fat" class="block text-sm font-medium text-gray-700 mb-2">首次體脂率 (%)</label><input type="number" id="body-fat" step="0.1" required class="form-input w-full px-4 py-3 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none" placeholder="請輸入首次測量的體脂率"></div>
+                    <div class="text-center text-xs text-gray-500 mb-8 p-3 bg-gray-100 rounded-lg"><p>登錄後請於 <strong class="text-blue-600">9/30前</strong> 且 <strong class="text-blue-600">間隔至少一週</strong> 後，返回門市進行二次測量以完成挑戰。</p></div>
+                    <button type="submit" id="submit-button" class="submit-button w-full text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center"><span id="button-text">完成登錄，鎖定資格</span><div id="button-loader" class="loader ease-linear rounded-full border-2 border-t-2 border-gray-200 h-6 w-6 hidden"></div></button>
+                    <p id="error-message" class="text-red-500 text-center mt-4 hidden"></p>
+                </form>
+            </div>
+            <div id="success-message" class="hidden text-center form-container p-10 rounded-2xl">
+                <svg class="w-16 h-16 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">登錄成功！</h2>
+                <p class="text-gray-600">您的挑戰資格已鎖定。</p>
+                <p class="text-gray-600 mt-1">我們期待您回來見證改變！</p>
+            </div>
+        </div>
+
+        <!-- Admin Data View (hidden by default) -->
+        <div id="admin-view" class="hidden w-full h-full max-w-6xl z-10 bg-white text-gray-800 rounded-2xl shadow-2xl flex flex-col">
+            <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                <div><h1 class="text-2xl font-bold text-gray-800">活動資料後台</h1><p class="text-gray-500">所有挑戰者登錄資料</p></div>
+                <button id="logout-button" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg transition duration-300">登出</button>
+            </div>
+            
+            <!-- Second Visit Form -->
+            <div class="p-6 bg-gray-50 border-b border-gray-200">
+                <h2 class="text-lg font-bold text-gray-700 mb-4">二次回訪登錄</h2>
+                <form id="update-form" class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                    <div>
+                        <label for="update-phone" class="block text-sm font-medium text-gray-600 mb-1">顧客電話號碼</label>
+                        <input type="tel" id="update-phone" required class="form-input w-full px-3 py-2 rounded-md" placeholder="輸入電話以查詢">
+                    </div>
+                    <div>
+                        <label for="update-body-fat" class="block text-sm font-medium text-gray-600 mb-1">第二次體脂率 (%)</label>
+                        <input type="number" step="0.1" id="update-body-fat" required class="form-input w-full px-3 py-2 rounded-md" placeholder="輸入第二次數據">
+                    </div>
+                    <button type="submit" id="update-button" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition duration-300">更新資料</button>
+                </form>
+                <p id="update-message" class="text-sm mt-3"></p>
+            </div>
+
+            <div id="table-wrapper" class="flex-grow overflow-y-auto p-6"></div>
+        </div>
+    </main>
+
+    <!-- Admin Login Elements -->
+    <button id="admin-login-button" class="fixed bottom-5 right-5 z-20 bg-white hover:bg-gray-200 border border-gray-300 rounded-full p-3 transition duration-300 shadow-lg">
+        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+    </button>
+    <div id="login-modal" class="hidden fixed inset-0 z-30 flex items-center justify-center p-4">
+        <div class="modal-backdrop absolute inset-0"></div>
+        <div class="w-full max-w-sm bg-white shadow-2xl rounded-2xl p-8 z-10 transform transition-all scale-95 opacity-0" id="login-modal-content">
+            <h1 class="text-2xl font-bold text-center text-gray-800 mb-2">內部系統登入</h1>
+            <p class="text-center text-gray-500 mb-6">請輸入管理密碼</p>
+            <form id="login-form">
+                <input type="password" id="password" class="w-full text-center text-lg px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="••••••••">
+                <button type="submit" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">登入</button>
+                <p id="login-error" class="text-red-500 text-center text-sm mt-4 hidden">密碼錯誤</p>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, where, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const CORRECT_PASSWORD = '6699';
+        let persistentAppId = localStorage.getItem('samsungChallengeAppId');
+        if (!persistentAppId) {
+            persistentAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            localStorage.setItem('samsungChallengeAppId', persistentAppId);
+        }
+        const appId = persistentAppId;
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        let db;
+
+        const customerView = document.getElementById('customer-view');
+        const adminView = document.getElementById('admin-view');
+        const adminLoginButton = document.getElementById('admin-login-button');
+        const loginModal = document.getElementById('login-modal');
+        const loginModalContent = document.getElementById('login-modal-content');
+        const loginForm = document.getElementById('login-form');
+        const logoutButton = document.getElementById('logout-button');
+        const challengeForm = document.getElementById('challenge-form');
+        const updateForm = document.getElementById('update-form');
+        const updateMessage = document.getElementById('update-message');
+
+        const openLoginModal = () => { loginModal.classList.remove('hidden'); setTimeout(() => { loginModalContent.classList.remove('scale-95', 'opacity-0'); }, 10); };
+        const closeLoginModal = () => { loginModalContent.classList.add('scale-95', 'opacity-0'); setTimeout(() => { loginModal.classList.add('hidden'); }, 200); };
+        const showAdminView = async () => { customerView.classList.add('hidden'); adminLoginButton.classList.add('hidden'); adminView.classList.remove('hidden'); await fetchData(); };
+        const showCustomerView = () => { adminView.classList.add('hidden'); customerView.classList.remove('hidden'); adminLoginButton.classList.remove('hidden'); };
+
+        adminLoginButton.addEventListener('click', openLoginModal);
+        loginModal.addEventListener('click', (e) => { if (e.target === loginModal) closeLoginModal(); });
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (document.getElementById('password').value === CORRECT_PASSWORD) {
+                closeLoginModal();
+                showAdminView();
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
+            }
+        });
+        logoutButton.addEventListener('click', showCustomerView);
+
+        const tableWrapper = document.getElementById('table-wrapper');
+        const showLoadingState = () => { tableWrapper.innerHTML = `<div class="text-center p-10"><div class="loader ease-linear rounded-full border-4 border-t-4 !border-gray-300 !border-t-blue-600 h-12 w-12 mx-auto"></div><p class="mt-4 text-gray-600">正在載入資料...</p></div>`; };
+        const showEmptyState = () => { tableWrapper.innerHTML = `<div class="text-center p-10"><p class="text-gray-600">目前尚無任何登錄資料。</p></div>`; };
+        const renderTable = (data) => {
+            let tableHTML = `<table class="min-w-full"><thead class="admin-table-header"><tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">姓名</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">聯絡電話</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">首次體脂 (%)</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">二次體脂 (%)</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">體脂變化</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">登錄時間</th>
+            </tr></thead><tbody class="text-gray-700">`;
+            data.forEach(item => {
+                let secondBodyFatHTML = item.secondBodyFat !== undefined ? item.secondBodyFat : '---';
+                let changeHTML = '---';
+                if (item.secondBodyFat !== undefined) {
+                    const change = item.secondBodyFat - item.initialBodyFat;
+                    const changeFixed = change.toFixed(1);
+                    if (change < 0) {
+                        changeHTML = `<span class="font-bold text-green-600">${changeFixed} %</span>`;
+                    } else if (change > 0) {
+                        changeHTML = `<span class="font-bold text-red-600">+${changeFixed} %</span>`;
+                    } else {
+                        changeHTML = `<span>${changeFixed} %</span>`;
+                    }
+                }
+                tableHTML += `<tr class="admin-table-row transition-colors duration-200">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">${item.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${item.phone}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${item.initialBodyFat}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold">${secondBodyFatHTML}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${changeHTML}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${item.registrationDate}</td>
+                </tr>`;
+            });
+            tableHTML += `</tbody></table>`;
+            tableWrapper.innerHTML = tableHTML;
+        };
+        async function fetchData() {
+            showLoadingState();
+            try {
+                const collectionPath = `artifacts/${appId}/public/data/healthChallengeRegistrations`;
+                const q = query(collection(db, collectionPath), orderBy("registrationDate", "desc"));
+                const querySnapshot = await getDocs(q);
+                const data = [];
+                querySnapshot.forEach(doc => {
+                    const docData = doc.data();
+                    data.push({ ...docData, id: doc.id, registrationDate: docData.registrationDate ? docData.registrationDate.toDate().toLocaleString('zh-TW', { hour12: false }) : 'N/A' });
+                });
+                if (data.length === 0) showEmptyState(); else renderTable(data);
+            } catch (error) {
+                tableWrapper.innerHTML = `<div class="text-center p-10 text-red-500">讀取資料失敗: ${error.message}</div>`;
+            }
+        }
+
+        challengeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const buttonText = document.getElementById('button-text');
+            const buttonLoader = document.getElementById('button-loader');
+            const submitButton = document.getElementById('submit-button');
+            const errorMessage = document.getElementById('error-message');
+            buttonText.classList.add('hidden');
+            buttonLoader.classList.remove('hidden');
+            submitButton.disabled = true;
+            errorMessage.classList.add('hidden');
+            try {
+                const collectionPath = `artifacts/${appId}/public/data/healthChallengeRegistrations`;
+                await addDoc(collection(db, collectionPath), {
+                    name: document.getElementById('name').value.trim(),
+                    phone: document.getElementById('phone').value.trim(),
+                    initialBodyFat: parseFloat(document.getElementById('body-fat').value),
+                    registrationDate: serverTimestamp()
+                });
+                document.getElementById('registration-form-container').classList.add('hidden');
+                document.getElementById('success-message').classList.remove('hidden');
+            } catch (error) {
+                errorMessage.textContent = `新增失敗: ${error.message}`;
+                errorMessage.classList.remove('hidden');
+                buttonText.classList.remove('hidden');
+                buttonLoader.classList.add('hidden');
+                submitButton.disabled = false;
+            }
+        });
+
+        updateForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const phone = document.getElementById('update-phone').value.trim();
+            const secondBodyFat = parseFloat(document.getElementById('update-body-fat').value);
+            
+            if (!phone || isNaN(secondBodyFat)) {
+                updateMessage.textContent = '電話和體脂率為必填欄位。';
+                updateMessage.className = 'text-sm mt-3 text-red-600';
+                return;
+            }
+
+            updateMessage.textContent = '正在查詢並更新資料...';
+            updateMessage.className = 'text-sm mt-3 text-gray-600';
+
+            try {
+                const collectionPath = `artifacts/${appId}/public/data/healthChallengeRegistrations`;
+                const q = query(collection(db, collectionPath), where("phone", "==", phone));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    updateMessage.textContent = `錯誤：找不到電話號碼為 ${phone} 的顧客資料。`;
+                    updateMessage.className = 'text-sm mt-3 text-red-600';
+                } else {
+                    const docToUpdate = querySnapshot.docs[0];
+                    await updateDoc(docToUpdate.ref, {
+                        secondBodyFat: secondBodyFat
+                    });
+                    updateMessage.textContent = `成功更新 ${docToUpdate.data().name} 的資料！`;
+                    updateMessage.className = 'text-sm mt-3 text-green-600';
+                    updateForm.reset();
+                    await fetchData(); // Refresh table
+                }
+            } catch (error) {
+                 updateMessage.textContent = `更新失敗: ${error.message}`;
+                 updateMessage.className = 'text-sm mt-3 text-red-600';
+            }
+        });
+
+        async function initializeFirebase() {
+            if (!firebaseConfig) { console.error("Firebase config is missing."); return; }
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                const auth = getAuth(app);
+                if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
+                else await signInAnonymously(auth);
+                console.log("Firebase Initialized Successfully.");
+            } catch (error) { console.error("Firebase Init Error:", error); }
+        }
+        initializeFirebase();
+    </script>
+</body>
+</html>
